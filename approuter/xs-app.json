@@ -1,0 +1,41 @@
+{
+  "welcomeFile": "/managedhtml5userapi/index.html",
+  "authenticationMethod": "route",
+  "routes": [
+    {
+      "source": "^/user-api(.*)",
+      "target": "$1",
+      "service": "sap-approuter-userapi"
+    },
+    {
+      "source": "^/api/(.*)$",
+      "target": "/api/$1",
+      "authenticationType": "xsuaa",
+      "destination": "managedhtml5userapi-srv",
+      "csrfProtection": true
+    },
+    {
+      "source": "^/sap/(.*)$",
+      "target": "/sap/$1",
+      "destination": "SAP_ABAP_BACKEND"
+    },
+    {
+      "source": "^/index.html$",
+      "service": "html5-apps-repo-rt",
+      "authenticationType": "xsuaa",
+      "cacheControl": "no-cache, no-store, must-revalidate"
+    },
+    {
+      "source": "^/managedhtml5userapiforcf/(.*)$",
+      "target": "/managedhtml5userapi/$1",
+      "service": "html5-apps-repo-rt",
+      "authenticationType": "xsuaa"
+    },
+    {
+      "source": "^(.*)$",
+      "target": "$1",
+      "service": "html5-apps-repo-rt",
+      "authenticationType": "xsuaa"
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+_schema-version: "3.2"
+ID: managedhtml5userapi
+description: User API
+version: 1.0.0
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+
+modules:
+  - name: managedhtml5userapi-srv
+    type: nodejs
+    path: srv
+    provides:
+      - name: srv_api
+        properties:
+          url: ${default-url}
+    requires:
+      - name: managedhtml5userapi-uaa
+      - name: managedhtml5userapi-logging
+      - name: managedhtml5userapi-destination-service
+      - name: managedhtml5userapi-connectivity-service
+    parameters:
+      memory: 256M
+      disk-quota: 1024M
+      stack: cflinuxfs4
+    build-parameters:
+      builder: custom
+      commands:
+        - npm install
+        - npm run build
+
+  - name: managedhtml5userapi-router
+    type: approuter.nodejs
+    path: approuter
+    requires:
+      - name: managedhtml5userapi-repo-runtime
+      - name: managedhtml5userapi-uaa
+      - name: managedhtml5userapi-destination-service
+      - name: managedhtml5userapi-connectivity-service
+        group: destinations
+        properties:
+          forwardAuthToken: false
+          strictSSL: false
+          name: ui5
+          url: https://ui5.sap.com
+      - name: managedhtml5userapi-logging
+      - name: srv_api
+        group: destinations
+        properties:
+          forwardAuthToken: true
+          strictSSL: false
+          name: managedhtml5userapi-srv
+          url: ~{url}
+    parameters:
+      disk-quota: 1024M
+      memory: 256M
+      stack: cflinuxfs4
+    build-parameters:
+      ignore: ["node_modules/"]
+
+  # ----------------------------------------------------------------------------------------
+  # name: html5userapi-deployer
+  # type: com.sap.application.content
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-deployer
+    type: com.sap.application.content
+    path: .
+    requires:
+      - name: managedhtml5userapi-repo-host
+        parameters:
+          content-target: true
+    build-parameters:
+      build-result: resources
+      requires:
+        - artifacts:
+            - HTML5Module-content.zip
+          name: managedhtml5userapi-HTML5Module
+          target-path: resources/
+
+  # ----------------------------------------------------------------------------------------
+  # name: html5userapi-destination-content
+  # type: com.sap.application.content
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-destination-content
+    type: com.sap.application.content
+    requires:
+      - name: managedhtml5userapi-repo-host
+        parameters:
+          service-key:
+            name: managedhtml5userapi-repo-host-key
+      - name: managedhtml5userapi-uaa
+        parameters:
+          service-key:
+            name: managedhtml5userapi-uaa-key
+      - name: managedhtml5userapi-destination-service
+        parameters:
+          content-target: true
+      - name: managedhtml5userapi-connectivity-service
+    parameters:
+      content:
+        instance:
+          existing_destinations_policy: ignore
+          destinations:
+            - Name: managedhtml5userapi-repo-host
+              ServiceInstanceName: managedhtml5userapi-repo-host
+              ServiceKeyName: managedhtml5userapi-repo-host-key
+              sap.cloud.service: com-managedhtml5userapi-ui
+            - Name: managedhtml5userapi-uaa
+              ServiceInstanceName: managedhtml5userapi-uaa
+              ServiceKeyName: managedhtml5userapi-uaa-key
+              sap.cloud.service: com-managedhtml5userapi-ui
+              Authentication: OAuth2UserTokenExchange
+    build-parameters:
+      no-source: true
+
+  # ----------------------------------------------------------------------------------------
+  # name: html5userapi-HTML5Module
+  # type: html5
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-HTML5Module
+    type: html5
+    path: HTML5Module
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm install
+        - npm run build
+      supported-platforms: []
+
+resources:
+  # ----------------------------------------------------------------------------------------
+  # name:    html5userapi-repo-host
+  # service: html5-apps-repo
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  # ----------------------------------------------------------------------------------------
+  # name:    html5userapi-repo-runtime
+  # service: html5-apps-repo
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-repo-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+  # ----------------------------------------------------------------------------------------
+  # name:    html5userapi-uaa
+  # service: xsuaa
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+  # ----------------------------------------------------------------------------------------
+  # name:    html5userapi-destination-service
+  # service: destination
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-destination-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+      service-name: managedhtml5userapi-destination-service
+      config:
+        HTML5Runtime_enabled: true
+        version: 1.0.0
+        init_data:
+          instance:
+            existing_destinations_policy: update
+            destinations:
+              - Name: ui5
+                Authentication: NoAuthentication
+                ProxyType: Internet
+                Type: HTTP
+                URL: https://ui5.sap.com
+              - Name: managedhtml5userapi-srv
+                Authentication: NoAuthentication
+                ProxyType: Internet
+                Type: HTTP
+                URL: ~{srv_api/url}
+                HTML5.DynamicDestination: true
+                HTML5.ForwardAuthToken: true
+    requires:
+      - name: srv_api
+
+  # ----------------------------------------------------------------------------------------
+  # name:    html5userapi-connectivity-service
+  # service: connectivity
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-connectivity-service
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
+  # ----------------------------------------------------------------------------------------
+  # name:    html5userapi-logging
+  # service: application-logs
+  # ----------------------------------------------------------------------------------------
+  - name: managedhtml5userapi-logging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: application-logs
+      service-plan: lite

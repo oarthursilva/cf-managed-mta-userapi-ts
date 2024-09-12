@@ -1,0 +1,63 @@
+<mvc:View xmlns:core="sap.ui.core"
+	controllerName="com.managedhtml5userapiforcf-ui.controller.Home"
+	xmlns:mvc="sap.ui.core.mvc" xmlns:l="sap.ui.layout" displayBlock="true" xmlns="sap.m">
+	<Shell id="shell">
+		<App id="app">
+			<pages>
+				<Page id="page" title="{i18n>title}">
+					<l:VerticalLayout class="sapUiContentPadding" width="100%">
+						<l:BlockLayout id="BlockLayout">
+              
+							<l:BlockLayoutRow accentCells="CustomUserInfo">
+								<l:BlockLayoutCell id="currentUser" width="2"
+									title="Get currentUser from Approuter including JWT">
+									<l:content>
+										<Link text="/api/currentUser" href="user-api/currentUser" />
+									</l:content>
+								</l:BlockLayoutCell>
+								<l:BlockLayoutCell id="UserAPI" width="2"
+									title="Custom srv Express Handler for User Info">
+									<l:content>
+										<Link text="/api/userInfo" href="api/userInfo" />
+									</l:content>
+								</l:BlockLayoutCell>
+							</l:BlockLayoutRow>
+
+							<l:BlockLayoutRow accentCells="JWT">
+								<l:BlockLayoutCell id="JWT" width="2" title="JWT">
+									<l:content>
+										<Link text="/api/jwt" href="api/jwt" />
+									</l:content>
+								</l:BlockLayoutCell>
+								<l:BlockLayoutCell id="jwtdecode" width="2" title="JWT Decoded">
+									<l:content>
+										<Link text="/api/jwtdecode" href="api/jwtdecode" />
+									</l:content>
+								</l:BlockLayoutCell>
+							</l:BlockLayoutRow>
+
+							<l:BlockLayoutRow accentCells="Backend">
+								<l:BlockLayoutCell id="BackendPrivate" width="2" title="Backend with authentication">
+									<l:content>
+										<VBox>
+											<Link text="/api/sap/userInfo" href="api/sap/userInfo" />
+										</VBox>
+									</l:content>
+								</l:BlockLayoutCell>
+							</l:BlockLayoutRow>
+
+							<l:BlockLayoutRow accentCells="Version">
+								<l:BlockLayoutCell id="Version" width="2" title="Version">
+									<l:content>
+										<Text id="versionText" text="not loaded" />
+									</l:content>
+								</l:BlockLayoutCell>
+							</l:BlockLayoutRow>
+
+						</l:BlockLayout>
+					</l:VerticalLayout>
+				</Page>
+			</pages>
+		</App>
+	</Shell>
+</mvc:View>

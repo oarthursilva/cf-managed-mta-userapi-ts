@@ -1,0 +1,15 @@
+{
+  "name": "managedhtml5userapi-router",
+  "version": "1.0.0",
+  "description": "",
+  "engines": {
+    "node": "^20"
+  },
+  "dependencies": {
+    "@sap/approuter": "^16.7.3"
+  },
+  "scripts": {
+    "start": "node ./approuter-start.js",
+    "start-local": "export VCAP_SERVICES=`cat default-env.json | jq .VCAP_SERVICES` && node ./approuter-start.js"
+  }
+}
